@@ -1,0 +1,118 @@
+package helper_dao
+
+import (
+	"errors"
+	"fmt"
+	"time"
+	"ys_go/forms"
+	"ys_go/global"
+	"ys_go/model"
+	"ys_go/response"
+)
+
+func GetHelerByName(name string) (*response.HelperInfoResponse, error) {
+	var helper model.Helper
+	result := global.DB.Where(&model.Helper{Name: name}).First(&helper)
+
+	if result.RowsAffected == 0 {
+		return nil, errors.New("没有找到相关模版集")
+	}
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	// 时间格式化
+	var startTimeStr, endTimeStr string
+	if helper.StartTime != nil {
+		startTimeStr = helper.StartTime.Format("2006-01-02 15:04:05")
+	}
+	if helper.EndTime != nil {
+		endTimeStr = helper.EndTime.Format("2006-01-02 15:04:05")
+	}
+	heplerInfo := response.HelperInfoResponse{
+		Id:        helper.ID,
+		Name:      helper.Name,
+		Intro:     helper.Intro,
+		StartTime: startTimeStr,
+		EndTime:   endTimeStr,
+		Role:      helper.Role,
+	}
+
+	return &heplerInfo, nil
+
+}
+
+func GetHelerById(id int64) (*response.HelperInfoResponse, error) {
+	var helper model.Helper
+	if err := global.DB.First(&helper, id).Error; err != nil {
+		return nil, errors.New("没有找到相关模版集")
+	}
+
+	var startTimeStr, endTimeStr string
+	if helper.StartTime != nil {
+		startTimeStr = helper.StartTime.Format("2006-01-02 15:04:05")
+	}
+	if helper.EndTime != nil {
+		endTimeStr = helper.EndTime.Format("2006-01-02 15:04:05")
+	}
+	heplerInfo := response.HelperInfoResponse{
+		Id:        helper.ID,
+		Name:      helper.Name,
+		Intro:     helper.Intro,
+		StartTime: startTimeStr,
+		EndTime:   endTimeStr,
+		Role:      helper.Role,
+	}
+	return &heplerInfo, nil
+}
+
+func CreateHelper(req *forms.HelperCreateRequest) (*response.HelperInfoResponse, error) {
+	var helper model.Helper
+
+	helper.Name = req.Name
+	helper.Intro = req.Intro
+
+	// 时间解析
+	layout := "2006-01-02 15:04:05"
+
+	if req.StartTime != "" {
+		t, err := time.Parse(layout, req.StartTime)
+		if err != nil {
+			return nil, fmt.Errorf("开始时间格式错误: %v", err)
+		}
+		helper.StartTime = &t
+	}
+
+	if req.EndTime != "" {
+		t, err := time.Parse(layout, req.EndTime)
+		if err != nil {
+			return nil, fmt.Errorf("结束时间格式错误: %v", err)
+		}
+		helper.EndTime = &t
+	}
+
+	// 保存数据库
+	if err := global.DB.Save(&helper).Error; err != nil {
+		return nil, err
+	}
+
+	// 格式化响应
+	var startTimeStr, endTimeStr string
+	if helper.StartTime != nil {
+		startTimeStr = helper.StartTime.Format(layout)
+	}
+	if helper.EndTime != nil {
+		endTimeStr = helper.EndTime.Format(layout)
+	}
+
+	helperInfo := response.HelperInfoResponse{
+		Id:        int32(helper.ID),
+		Name:      helper.Name,
+		Intro:     helper.Intro,
+		StartTime: startTimeStr,
+		EndTime:   endTimeStr,
+		Role:      helper.Role,
+		Address:   helper.Address,
+	}
+	return &helperInfo, nil
+}

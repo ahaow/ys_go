@@ -1,0 +1,23 @@
+app:
+  name: ys_go
+  port: :3000
+
+database:
+  mode: mysql
+  dsn: root:root@tcp(127.0.0.1:3307)/ys_go?charset=utf8mb4&parseTime=True&loc=Local
+  MaxIdleConns: 10
+  MaxOpenCons: 114
+
+redis:
+  address: 127.0.0.1:6379
+  password: ""
+  db: 0
+
+jwt:
+  expires: 72 # 有效期 单位小时
+  issuer: wh
+  key: JWT_SECRET
+
+upload:
+  size: 20 # 上传大小限制 单位MB
+  dir: images
